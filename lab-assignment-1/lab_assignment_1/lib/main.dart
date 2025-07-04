@@ -1,0 +1,281 @@
+import 'package:flutter/material.dart';
+
+void main() {
+  runApp(VangtiChaiApp());
+}
+
+class VangtiChaiApp extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'VangtiChai',
+      theme: ThemeData(
+        primarySwatch: Colors.green,
+        visualDensity: VisualDensity.adaptivePlatformDensity,
+      ),
+      home: VangtiChai(),
+    );
+  }
+}
+
+class VangtiChai extends StatefulWidget {
+  @override
+  State<VangtiChai> createState() => _VangtiChaiState();
+}
+
+class _VangtiChaiState extends State<VangtiChai> {
+  String amountStr = "";
+  Map<int, int> changeMap = {};
+
+  void onDigitPressed(String digit) {
+    setState(() {
+      // Prevent entering amounts larger than reasonable limit
+      if (amountStr.length < 8) {
+        amountStr += digit;
+        calculate();
+      }
+    });
+  }
+
+  void onClear() {
+    setState(() {
+      amountStr = "";
+      changeMap.clear();
+    });
+  }
+
+  void calculate() {
+    int amount = int.tryParse(amountStr) ?? 0;
+    changeMap = calculateChange(amount);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text("VangtiChai"),
+        backgroundColor: Colors.green[700],
+        foregroundColor: Colors.white,
+      ),
+      // body: LayoutBuilder(
+      //   builder: (context, constraints) {
+      //     if (constraints.maxWidth < 600) {
+      //       return buildPortrait();
+      //     } else {
+      //       return buildLandscape();
+      //     }
+      //   },
+      // ),
+
+      body: buildPortrait(), // For simplicity, using portrait layout only
+    );
+  }
+
+  Widget buildPortrait() {
+    return Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: Row(
+        children: [
+          Expanded(flex: 2, child: buildChangeTable()),
+          SizedBox(width: 16),
+          Expanded(flex: 3, child: buildKeypad()),
+        ],
+      ),
+    );
+  }
+
+  Widget buildLandscape() {
+    return Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: Column(
+        children: [
+          Expanded(flex: 2, child: buildChangeTable()),
+          SizedBox(height: 16),
+          Expanded(flex: 3, child: buildKeypad()),
+        ],
+      ),
+    );
+  }
+
+  Widget buildChangeTable() {
+    return Card(
+      elevation: 4,
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Amount display
+            Container(
+              width: double.infinity,
+              padding: EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.green[50],
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.green[200]!),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    "Amount:",
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: Colors.green[700],
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  Text(
+                    "৳${amountStr.isEmpty ? '0' : amountStr}",
+                    style: TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.green[800],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            SizedBox(height: 16),
+            
+            // Change breakdown
+            Text(
+              "Change Breakdown:",
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Colors.grey[800],
+              ),
+            ),
+            SizedBox(height: 8),
+            
+            Expanded(
+              child: changeMap.isEmpty 
+                ? Center(
+                    child: Text(
+                      "Enter amount to see change",
+                      style: TextStyle(
+                        color: Colors.grey[600],
+                        fontSize: 16,
+                      ),
+                    ),
+                  )
+                : SingleChildScrollView(
+                    child: Column(
+                      children: changeMap.entries
+                          .where((e) => e.value > 0)
+                          .map((e) => Container(
+                            margin: EdgeInsets.symmetric(vertical: 4),
+                            padding: EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(color: Colors.grey[300]!),
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  "৳${e.key}",
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                                Container(
+                                  padding: EdgeInsets.symmetric(
+                                    horizontal: 12,
+                                    vertical: 4,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: Colors.green[100],
+                                    borderRadius: BorderRadius.circular(16),
+                                  ),
+                                  child: Text(
+                                    "${e.value}",
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.green[800],
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ))
+                          .toList(),
+                    ),
+                  ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget buildKeypad() {
+    List<String> keys = [
+      "1", "2", "3",
+      "4", "5", "6", 
+      "7", "8", "9",
+      "0", "", "CLR"
+    ];
+
+    return Card(
+      elevation: 4,
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: GridView.count(
+          crossAxisCount: 3,
+          shrinkWrap: true,
+          crossAxisSpacing: 12,
+          mainAxisSpacing: 12,
+          children: keys.map((key) {
+            if (key.isEmpty) {
+              return SizedBox(); // Empty space
+            }
+            
+            bool isClear = key == "CLR";
+            
+            return ElevatedButton(
+              onPressed: () {
+                if (isClear) {
+                  onClear();
+                } else {
+                  onDigitPressed(key);
+                }
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: isClear ? Colors.red[400] : Colors.green[600],
+                foregroundColor: Colors.white,
+                elevation: 3,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                textStyle: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              child: Text(key),
+            );
+          }).toList(),
+        ),
+      ),
+    );
+  }
+}
+
+Map<int, int> calculateChange(int amount) {
+  List<int> notes = [500, 100, 50, 20, 10, 5, 2, 1];
+  Map<int, int> result = {};
+  int remaining = amount;
+  
+  for (var note in notes) {
+    int count = remaining ~/ note;
+    result[note] = count;
+    remaining %= note;
+  }
+  
+  return result;
+}
