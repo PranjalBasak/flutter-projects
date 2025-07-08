@@ -41,20 +41,7 @@ class _VangtiChaiState extends State<VangtiChai> {
   String amountStr = "";
   Map<int, int> changeMap = {};
 
-    //   State Variables
-
-    // String amountStr = "";
-    // Map<int, int> changeMap = {};
-    // amountStr → what user has typed, e.g. "873".
-
-    // changeMap → the denomination breakdown:
-
-    // {
-    //   500: 1,
-    //   100: 3,
-    //   ...
-    // }
-
+  
   void onDigitPressed(String digit) {
     setState(() { // In Flutter, setState() is a method used to update the user interface (UI) 
                   // when the state of a StatefulWidget changes. Calling setState() tells Flutter
@@ -92,19 +79,20 @@ class _VangtiChaiState extends State<VangtiChai> {
       body: Column(
         children: [
           BuildAmountDisplay(amountStr: amountStr,),
-          Expanded(child: buildPortrait()),
+          Expanded(child: buildContainer()),
         ],
       ), // For simplicity, using portrait layout only
     );
   }
 
-  Widget buildPortrait() {
+  // It will Build the UI for the Main Content
+  Widget buildContainer() { 
     return Padding(
       padding: const EdgeInsets.all(16.0),
       child: LayoutBuilder(
         builder: (context, constraints) {
           double screenWidth = constraints.maxWidth;
-          double screenHeight = constraints.maxHeight;
+          //double screenHeight = constraints.maxHeight;
           
           // Calculate responsive breakpoints based on screen size
           bool isVeryNarrow = screenWidth < 500;
@@ -123,7 +111,7 @@ class _VangtiChaiState extends State<VangtiChai> {
             children: [
               Expanded(
                 flex: changeTableFlex,
-                child: buildChangeTable(),
+                child: buildChangeTable(), // Build the change table with responsive design
               ),
               SizedBox(width: 16),
               Expanded(
@@ -131,7 +119,7 @@ class _VangtiChaiState extends State<VangtiChai> {
                 child: Center(
                   child: SizedBox(
                     width: keypadWidth,
-                    child: buildKeypad(),
+                    child: buildKeypad(), // Build the keypad with responsive design
                   ),
                 ),
               ),
@@ -142,18 +130,68 @@ class _VangtiChaiState extends State<VangtiChai> {
     );
   }
 
-  Widget buildLandscape() {
-    return Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: Column(
-        children: [
-          Expanded(flex: 2, child: buildChangeTable()),
-          SizedBox(height: 16),
-          Expanded(flex: 3, child: buildKeypad()),
-        ],
+  Widget buildChangeTile(
+  MapEntry<int, int> e,
+  double availableWidth,
+  double itemFontSize,
+  double itemPadding,
+  double badgePadding,
+) {
+  return Container(
+    margin: EdgeInsets.symmetric(
+      vertical: availableWidth < 250
+          ? 1.0
+          : (availableWidth < 350 ? 1.5 : 2.0),
+    ),
+    padding: EdgeInsets.all(itemPadding),
+    decoration: BoxDecoration(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(
+        availableWidth < 250
+            ? 3.0
+            : (availableWidth < 350 ? 4.0 : 6.0),
       ),
-    );
-  }
+      border: Border.all(color: Colors.grey[300]!),
+    ),
+    child: Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          "৳${e.key}",
+          style: TextStyle(
+            fontSize: itemFontSize,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        Container(
+          padding: EdgeInsets.symmetric(
+            horizontal: badgePadding,
+            vertical: 2,
+          ),
+          decoration: BoxDecoration(
+            color: Colors.green[100],
+            borderRadius: BorderRadius.circular(
+              availableWidth < 250
+                  ? 6.0
+                  : (availableWidth < 350 ? 8.0 : 12.0),
+            ),
+          ),
+          child: Text(
+            "${e.value}",
+            style: TextStyle(
+              fontSize: itemFontSize,
+              fontWeight: FontWeight.bold,
+              color: Colors.green[800],
+            ),
+          ),
+        ),
+      ],
+    ),
+  );
+}
+
+
+ 
 
   Widget buildChangeTable() {
     return LayoutBuilder(
@@ -167,15 +205,19 @@ class _VangtiChaiState extends State<VangtiChai> {
         double itemPadding = availableWidth < 250 ? 3.0 : (availableWidth < 350 ? 4.0 : (availableWidth < 450 ? 6.0 : 12.0));
         double badgePadding = availableWidth < 250 ? 3.0 : (availableWidth < 350 ? 4.0 : (availableWidth < 450 ? 6.0 : 12.0));
         
-        return Card(
+        return Card( // Use Card to give a nice elevation effect
           elevation: 4,
-          child: Padding(
+          child: 
+          Padding(
             padding: EdgeInsets.all(padding),
-            child: Column(
+            child: 
+            Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Change breakdown
-                Text(
+                
+
+
+                Text( // Just "Change Breakdown:" label
                   "Change Breakdown:",
                   style: TextStyle(
                     fontSize: titleFontSize,
@@ -183,24 +225,85 @@ class _VangtiChaiState extends State<VangtiChai> {
                     color: Colors.grey[800],
                   ),
                 ),
-                SizedBox(height: 8),
+
+
+                SizedBox(height: 8), // Space between title and items
                 
+
                 Expanded(
-                  child: changeMap.isEmpty 
-                    ? Center(
-                        child: Text(
-                          "Enter amount to see change",
+  child: changeMap.isEmpty
+      ? Center(
+          child: Text(
+            "Enter amount to see change",
+            style: TextStyle(
+              color: Colors.grey[600],
+              fontSize: itemFontSize,
+            ),
+          ),
+        )
+      : LayoutBuilder(
+          builder: (context, constraints) {
+            double screenHeight = constraints.maxHeight;
+            double screenWidth = constraints.maxWidth;
+            bool isShortScreen = screenHeight < 400;
+
+            final items = changeMap.entries
+                .where((e) => e.value > 0)
+                .map((e) => buildChangeTile(e, availableWidth, itemFontSize, itemPadding, badgePadding))
+                .toList();
+
+            if (!isShortScreen  && screenHeight > screenWidth) {
+              // Normal height → show single column
+              return SingleChildScrollView(
+                child: Column(
+                  children: items,
+                ),
+              );
+            } else {
+              // Short screen → show 2 columns
+              return GridView.count(
+                crossAxisCount: 2,
+                childAspectRatio: 3, // adjust to make items less tall
+                mainAxisSpacing: 4,
+                crossAxisSpacing: 4,
+                shrinkWrap: true,
+                physics: NeverScrollableScrollPhysics(),
+                children: items,
+              );
+            }
+          },
+        ),
+)
+
+
+
+
+                /* Testing Masked
+                Expanded(
+                  child: 
+                  changeMap.isEmpty 
+                    ? Center(  // Message ta ekdom center e show korbe jokhon changeMap empty thake
+                        child: 
+                        
+                        Text(
+                          "Enter amount to see change", // Just ekta placeholder text; jokhon changeMap empty thake tokhon show korbe
                           style: TextStyle(
                             color: Colors.grey[600],
                             fontSize: itemFontSize,
                           ),
                         ),
                       )
+
+
+                    // If changeMap is not empty, show the list of changes
+                    // Using SingleChildScrollView to allow scrolling if items overflow
                     : SingleChildScrollView(
-                        child: Column(
+                        child: 
+                        
+                        Column( // Column to hold all the change items (Item = Note/Change + Count)
                           children: changeMap.entries
                               .where((e) => e.value > 0)
-                              .map((e) => Container(
+                              .map((e) => Container( // Big Container Starts
                                 margin: EdgeInsets.symmetric(vertical: availableWidth < 250 ? 1.0 : (availableWidth < 350 ? 1.5 : 2.0)),
                                 padding: EdgeInsets.all(itemPadding),
                                 decoration: BoxDecoration(
@@ -208,41 +311,75 @@ class _VangtiChaiState extends State<VangtiChai> {
                                   borderRadius: BorderRadius.circular(availableWidth < 250 ? 3.0 : (availableWidth < 350 ? 4.0 : 6.0)),
                                   border: Border.all(color: Colors.grey[300]!),
                                 ),
-                                child: Row(
+
+
+                                child: Row( // Every [Note/Change] AND [Its Count] will be in a Row
                                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                   children: [
-                                    Text(
+
+                                    Text( // This is the note/change in text
                                       "৳${e.key}",
                                       style: TextStyle(
                                         fontSize: itemFontSize,
                                         fontWeight: FontWeight.w600,
                                       ),
                                     ),
+
+
+
+
+
+
+
                                     Container(
+
+
+
                                       padding: EdgeInsets.symmetric(
                                         horizontal: badgePadding,
                                         vertical: 2,
                                       ),
+
+
+
                                       decoration: BoxDecoration(
                                         color: Colors.green[100],
                                         borderRadius: BorderRadius.circular(availableWidth < 250 ? 6.0 : (availableWidth < 350 ? 8.0 : 12.0)),
                                       ),
-                                      child: Text(
+
+
+                                      child: Text( // This is the count of that note/change
                                         "${e.value}",
                                         style: TextStyle(
                                           fontSize: itemFontSize,
                                           fontWeight: FontWeight.bold,
                                           color: Colors.green[800],
                                         ),
+
+
                                       ),
                                     ),
+
+
+
+
+
+
+
+
+
+
+
                                   ],
                                 ),
-                              ))
+                              )) // // Big Container Ends
+
                               .toList(),
                         ),
                       ),
                 ),
+
+                */ // Testing Masked
               ],
             ),
           ),
@@ -262,35 +399,66 @@ class _VangtiChaiState extends State<VangtiChai> {
         double fontSize = availableWidth < 200 ? 14.0 : (availableWidth < 300 ? 16.0 : (availableWidth < 400 ? 18.0 : 20.0));
         double borderRadius = availableWidth < 200 ? 6.0 : (availableWidth < 300 ? 8.0 : (availableWidth < 400 ? 10.0 : 12.0));
         
-        List<String> keys = [
+
+
+        double screenHeight = MediaQuery.of(context).size.height;
+        bool isShortScreen = screenHeight < 500; // Check if the screen height is less than 500 pixels to determine if it's a short screen
+        List<String> keys3Columns = [
           "1", "2", "3",
           "4", "5", "6", 
           "7", "8", "9",
           "0", "", "CLR"
         ];
 
-        return Card(
+        List<String> keys4Columns = [
+          "1", "2", "3", "4",
+          "5", "6", "7", "8",
+          "9", "", "", "CLR"
+        ];
+
+
+        List<String> keys = isShortScreen ? 
+          keys4Columns : // If the screen is short, we will use 4 columns
+          keys3Columns; // Otherwise, we will use 3 columns
+
+
+        return Card( // Use Card to give a nice elevation effect
+
+
           elevation: 4,
-          child: Padding(
+          child: 
+          
+          Padding(
             padding: EdgeInsets.all(padding),
-            child: GridView.count(
-              crossAxisCount: 3,
+            child: 
+            GridView.count(
+              // crossAxisCount: 3,
+              crossAxisCount: isShortScreen ? 4 : 3, // If the screen is short, we will show 4 buttons in a row, otherwise 3
+              physics: NeverScrollableScrollPhysics(), // Disable scrolling to fit the keypad in the available space
               shrinkWrap: true,
               crossAxisSpacing: spacing,
               mainAxisSpacing: spacing,
-              children: keys.map((key) {
+              children: 
+              keys.map((key) { // keys is a list of strings representing keypad buttons
+                // If the key is empty, we return an empty SizedBox to create a blank space
+                
                 if (key.isEmpty) {
-                  return SizedBox();
+                  return SizedBox(); // Nothing will be shown for empty key
                 }
                 
-                bool isClear = key == "CLR";
+                bool isClear = key == "CLR"; // If key == "CLR" then isClear=True
                 
                 return ElevatedButton(
+                  
                   onPressed: () {
-                    if (isClear) {
+                    if (isClear) { // if "CLR" button is pressed
+                      // Call the onClear function to reset the amount and change map
                       onClear();
-                    } else {
-                      onDigitPressed(key);
+                    } 
+                    
+                    else {
+                      onDigitPressed(key); // Call the onDigitPressed function with the pressed key
+                      // This will append the digit to the amountStr and recalculate change
                     }
                   },
                   style: ElevatedButton.styleFrom(
@@ -329,26 +497,33 @@ class BuildAmountDisplay extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return Container 
+    (
       width: double.infinity,
       padding: EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.green[50],
         borderRadius: BorderRadius.circular(8),
         border: Border.all(color: Colors.green[200]!),
-      ),
-      child: Column(
+    ),
+
+      child: 
+      Column( // "Taka" Label and er amount ekta column er moddhe rakhsi jate vertically aligned thake
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            "Amount:",
+
+
+          Text( // "Taka:" label
+            "Taka:",
             style: TextStyle(
               fontSize: 16,
               color: Colors.green[700],
               fontWeight: FontWeight.w500,
             ),
           ),
-          Text(
+
+
+          Text( // Takar Amount
             "৳${amountStr.isEmpty ? '0' : amountStr}",
             style: TextStyle(
               fontSize: 24,
@@ -361,6 +536,11 @@ class BuildAmountDisplay extends StatelessWidget {
     );
   }
 }
+
+
+
+
+
 
 Map<int, int> calculateChange(int amount) {
   List<int> notes = [500, 100, 50, 20, 10, 5, 2, 1];
