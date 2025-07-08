@@ -88,15 +88,6 @@ class _VangtiChaiState extends State<VangtiChai> {
         backgroundColor: Colors.green[700],
         foregroundColor: Colors.white,
       ),
-      // body: LayoutBuilder(
-      //   builder: (context, constraints) {
-      //     if (constraints.maxWidth < 600) {
-      //       return buildPortrait();
-      //     } else {
-      //       return buildLandscape();
-      //     }
-      //   },
-      // ),
 
       body: Column(
         children: [
