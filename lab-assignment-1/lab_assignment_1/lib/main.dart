@@ -110,12 +110,43 @@ class _VangtiChaiState extends State<VangtiChai> {
   Widget buildPortrait() {
     return Padding(
       padding: const EdgeInsets.all(16.0),
-      child: Row(
-        children: [
-          Expanded(flex: 2, child: buildChangeTable()),
-          SizedBox(width: 16),
-          Expanded(flex: 3, child: buildKeypad()),
-        ],
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          double screenWidth = constraints.maxWidth;
+          double screenHeight = constraints.maxHeight;
+          
+          // Calculate responsive breakpoints based on screen size
+          bool isVeryNarrow = screenWidth < 500;
+          bool isNarrow = screenWidth < 700;
+          bool isMedium = screenWidth < 900;
+          
+          // Calculate optimal keypad dimensions that fit side-by-side
+          double availableWidthForKeypad = (screenWidth - 32 - 16) * 0.35; // Account for padding and spacing
+          double keypadWidth = availableWidthForKeypad.clamp(150.0, 280.0);
+          
+          // Adjust flex ratios based on screen size for better proportions - give keypad more space
+          int changeTableFlex = isVeryNarrow ? 2 : (isNarrow ? 3 : (isMedium ? 4 : 5));
+          int keypadFlex = isVeryNarrow ? 3 : (isNarrow ? 4 : (isMedium ? 5 : 6));
+          
+          return Row(
+            children: [
+              Expanded(
+                flex: changeTableFlex,
+                child: buildChangeTable(),
+              ),
+              SizedBox(width: 16),
+              Expanded(
+                flex: keypadFlex,
+                child: Center(
+                  child: SizedBox(
+                    width: keypadWidth,
+                    child: buildKeypad(),
+                  ),
+                ),
+              ),
+            ],
+          );
+        },
       ),
     );
   }
@@ -134,150 +165,168 @@ class _VangtiChaiState extends State<VangtiChai> {
   }
 
   Widget buildChangeTable() {
-    return Card(
-      elevation: 4,
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Amount display
-            //buildAmountDisplay(amountStr: amountStr),
-            //SizedBox(height: 16),
-            
-            // Change breakdown
-            Text(
-              "Change Breakdown:",
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: Colors.grey[800],
-              ),
-            ),
-            SizedBox(height: 8),
-            
-            Expanded(
-              child: changeMap.isEmpty 
-                ? Center(
-                    child: Text(
-                      "Enter amount to see change",
-                      style: TextStyle(
-                        color: Colors.grey[600],
-                        fontSize: 16,
-                      ),
-                    ),
-                  )
-                : SingleChildScrollView(
-                    child: Column(
-                      children: changeMap.entries
-                          .where((e) => e.value > 0)
-                          .map((e) => Container(
-                            margin: EdgeInsets.symmetric(vertical: 4),
-                            padding: EdgeInsets.all(12),
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(8),
-                              border: Border.all(color: Colors.grey[300]!),
-                            ),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text(
-                                  "৳${e.key}",
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                                Container(
-                                  padding: EdgeInsets.symmetric(
-                                    horizontal: 12,
-                                    vertical: 4,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: Colors.green[100],
-                                    borderRadius: BorderRadius.circular(16),
-                                  ),
-                                  child: Text(
-                                    "${e.value}",
-                                    style: TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.green[800],
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ))
-                          .toList(),
-                    ),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        double availableWidth = constraints.maxWidth;
+        
+        // Scale down text and padding for smaller screens - more aggressive scaling
+        double titleFontSize = availableWidth < 250 ? 10.0 : (availableWidth < 350 ? 12.0 : (availableWidth < 450 ? 14.0 : 18.0));
+        double itemFontSize = availableWidth < 250 ? 8.0 : (availableWidth < 350 ? 10.0 : (availableWidth < 450 ? 12.0 : 16.0));
+        double padding = availableWidth < 250 ? 4.0 : (availableWidth < 350 ? 6.0 : (availableWidth < 450 ? 8.0 : 16.0));
+        double itemPadding = availableWidth < 250 ? 3.0 : (availableWidth < 350 ? 4.0 : (availableWidth < 450 ? 6.0 : 12.0));
+        double badgePadding = availableWidth < 250 ? 3.0 : (availableWidth < 350 ? 4.0 : (availableWidth < 450 ? 6.0 : 12.0));
+        
+        return Card(
+          elevation: 4,
+          child: Padding(
+            padding: EdgeInsets.all(padding),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Change breakdown
+                Text(
+                  "Change Breakdown:",
+                  style: TextStyle(
+                    fontSize: titleFontSize,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.grey[800],
                   ),
+                ),
+                SizedBox(height: 8),
+                
+                Expanded(
+                  child: changeMap.isEmpty 
+                    ? Center(
+                        child: Text(
+                          "Enter amount to see change",
+                          style: TextStyle(
+                            color: Colors.grey[600],
+                            fontSize: itemFontSize,
+                          ),
+                        ),
+                      )
+                    : SingleChildScrollView(
+                        child: Column(
+                          children: changeMap.entries
+                              .where((e) => e.value > 0)
+                              .map((e) => Container(
+                                margin: EdgeInsets.symmetric(vertical: availableWidth < 250 ? 1.0 : (availableWidth < 350 ? 1.5 : 2.0)),
+                                padding: EdgeInsets.all(itemPadding),
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(availableWidth < 250 ? 3.0 : (availableWidth < 350 ? 4.0 : 6.0)),
+                                  border: Border.all(color: Colors.grey[300]!),
+                                ),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Text(
+                                      "৳${e.key}",
+                                      style: TextStyle(
+                                        fontSize: itemFontSize,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                    Container(
+                                      padding: EdgeInsets.symmetric(
+                                        horizontal: badgePadding,
+                                        vertical: 2,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: Colors.green[100],
+                                        borderRadius: BorderRadius.circular(availableWidth < 250 ? 6.0 : (availableWidth < 350 ? 8.0 : 12.0)),
+                                      ),
+                                      child: Text(
+                                        "${e.value}",
+                                        style: TextStyle(
+                                          fontSize: itemFontSize,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.green[800],
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ))
+                              .toList(),
+                        ),
+                      ),
+                ),
+              ],
             ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 
   Widget buildKeypad() {
-    List<String> keys = [
-      "1", "2", "3",
-      "4", "5", "6", 
-      "7", "8", "9",
-      "0", "", "CLR"
-    ];
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        double availableWidth = constraints.maxWidth;
+        
+        // Scale down spacing and padding for smaller screens
+        double padding = availableWidth < 200 ? 6.0 : (availableWidth < 300 ? 8.0 : (availableWidth < 400 ? 12.0 : 16.0));
+        double spacing = availableWidth < 200 ? 4.0 : (availableWidth < 300 ? 6.0 : (availableWidth < 400 ? 8.0 : 12.0));
+        double fontSize = availableWidth < 200 ? 14.0 : (availableWidth < 300 ? 16.0 : (availableWidth < 400 ? 18.0 : 20.0));
+        double borderRadius = availableWidth < 200 ? 6.0 : (availableWidth < 300 ? 8.0 : (availableWidth < 400 ? 10.0 : 12.0));
+        
+        List<String> keys = [
+          "1", "2", "3",
+          "4", "5", "6", 
+          "7", "8", "9",
+          "0", "", "CLR"
+        ];
 
-    return Card(
-      elevation: 4,
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: GridView.count(
-          crossAxisCount: 3,
-          shrinkWrap: true,
-          crossAxisSpacing: 12,
-          mainAxisSpacing: 12,
-          children: keys.map((key) { // map iterates thru the key list and applies an anonymous function on it
-            if (key.isEmpty) { // anonymous functions follow a weird syntax: (key) {---}
-              return SizedBox(); // Empty space
-            }
-            
-            bool isClear = key == "CLR";
-            /*
-            if(key == "CLR"){
-              isClear = True;  
-            } else {
-              isClear = False;
-            }
-            */
-            return ElevatedButton( // onPressed: , style: , child: 
-              onPressed: () {
-                if (isClear) { // if clear button is pressed
-                  onClear();
-                } else {
-                  onDigitPressed(key);
+        return Card(
+          elevation: 4,
+          child: Padding(
+            padding: EdgeInsets.all(padding),
+            child: GridView.count(
+              crossAxisCount: 3,
+              shrinkWrap: true,
+              crossAxisSpacing: spacing,
+              mainAxisSpacing: spacing,
+              children: keys.map((key) {
+                if (key.isEmpty) {
+                  return SizedBox();
                 }
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: isClear ? Colors.red[400] : Colors.green[600],
-                foregroundColor: Colors.white,
-                elevation: 3,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                textStyle: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              child: Text(key), // only one child -> the key
-            );
-          }).toList(),
-        ),
-      ),
+                
+                bool isClear = key == "CLR";
+                
+                return ElevatedButton(
+                  onPressed: () {
+                    if (isClear) {
+                      onClear();
+                    } else {
+                      onDigitPressed(key);
+                    }
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: isClear ? Colors.red[400] : Colors.green[600],
+                    foregroundColor: Colors.white,
+                    elevation: 3,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(borderRadius),
+                    ),
+                    textStyle: TextStyle(
+                      fontSize: fontSize,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  child: Text(key),
+                );
+              }).toList(),
+            ),
+          ),
+        );
+      },
     );
   }
 }
+
+
+  
 
 class BuildAmountDisplay extends StatelessWidget {
   const BuildAmountDisplay({
