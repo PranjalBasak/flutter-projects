@@ -231,155 +231,53 @@ class _VangtiChaiState extends State<VangtiChai> {
                 
 
                 Expanded(
-  child: changeMap.isEmpty
-      ? Center(
-          child: Text(
-            "Enter amount to see change",
-            style: TextStyle(
-              color: Colors.grey[600],
-              fontSize: itemFontSize,
-            ),
-          ),
-        )
-      : LayoutBuilder(
-          builder: (context, constraints) {
-            double screenHeight = constraints.maxHeight;
-            double screenWidth = constraints.maxWidth;
-            bool isShortScreen = screenHeight < 400;
-
-            final items = changeMap.entries
-                .where((e) => e.value > 0)
-                .map((e) => buildChangeTile(e, availableWidth, itemFontSize, itemPadding, badgePadding))
-                .toList();
-
-            if (!isShortScreen  && screenHeight > screenWidth) {
-              // Normal height → show single column
-              return SingleChildScrollView(
-                child: Column(
-                  children: items,
-                ),
-              );
-            } else {
-              // Short screen → show 2 columns
-              return GridView.count(
-                crossAxisCount: 2,
-                childAspectRatio: 3, // adjust to make items less tall
-                mainAxisSpacing: 4,
-                crossAxisSpacing: 4,
-                shrinkWrap: true,
-                physics: NeverScrollableScrollPhysics(),
-                children: items,
-              );
-            }
-          },
-        ),
-)
-
-
-
-
-                /* Testing Masked
-                Expanded(
-                  child: 
-                  changeMap.isEmpty 
-                    ? Center(  // Message ta ekdom center e show korbe jokhon changeMap empty thake
-                        child: 
-                        
-                        Text(
-                          "Enter amount to see change", // Just ekta placeholder text; jokhon changeMap empty thake tokhon show korbe
-                          style: TextStyle(
-                            color: Colors.grey[600],
-                            fontSize: itemFontSize,
+                  child: changeMap.isEmpty
+                      ? Center(
+                          child: Text(
+                            "Enter amount to see change",
+                            style: TextStyle(
+                              color: Colors.grey[600],
+                              fontSize: itemFontSize,
+                            ),
                           ),
-                        ),
-                      )
+                        )
+                      : LayoutBuilder(
+                          builder: (context, constraints) {
+                            double screenHeight = constraints.maxHeight;
+                            double screenWidth = constraints.maxWidth;
+                            //bool isShortScreen = screenHeight < 400;
 
+                            final items = changeMap.entries
+                                .where((e) => e.value > 0)
+                                .map((e) => buildChangeTile(e, availableWidth, itemFontSize, itemPadding, badgePadding))
+                                .toList();
 
-                    // If changeMap is not empty, show the list of changes
-                    // Using SingleChildScrollView to allow scrolling if items overflow
-                    : SingleChildScrollView(
-                        child: 
-                        
-                        Column( // Column to hold all the change items (Item = Note/Change + Count)
-                          children: changeMap.entries
-                              .where((e) => e.value > 0)
-                              .map((e) => Container( // Big Container Starts
-                                margin: EdgeInsets.symmetric(vertical: availableWidth < 250 ? 1.0 : (availableWidth < 350 ? 1.5 : 2.0)),
-                                padding: EdgeInsets.all(itemPadding),
-                                decoration: BoxDecoration(
-                                  color: Colors.white,
-                                  borderRadius: BorderRadius.circular(availableWidth < 250 ? 3.0 : (availableWidth < 350 ? 4.0 : 6.0)),
-                                  border: Border.all(color: Colors.grey[300]!),
+                            // if (!isShortScreen  && screenHeight > screenWidth) {
+                            if (screenHeight > screenWidth) {
+                              // Normal height → show single column
+                              return SingleChildScrollView(
+                                child: Column(
+                                  children: items,
                                 ),
-
-
-                                child: Row( // Every [Note/Change] AND [Its Count] will be in a Row
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                  children: [
-
-                                    Text( // This is the note/change in text
-                                      "৳${e.key}",
-                                      style: TextStyle(
-                                        fontSize: itemFontSize,
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                    ),
-
-
-
-
-
-
-
-                                    Container(
-
-
-
-                                      padding: EdgeInsets.symmetric(
-                                        horizontal: badgePadding,
-                                        vertical: 2,
-                                      ),
-
-
-
-                                      decoration: BoxDecoration(
-                                        color: Colors.green[100],
-                                        borderRadius: BorderRadius.circular(availableWidth < 250 ? 6.0 : (availableWidth < 350 ? 8.0 : 12.0)),
-                                      ),
-
-
-                                      child: Text( // This is the count of that note/change
-                                        "${e.value}",
-                                        style: TextStyle(
-                                          fontSize: itemFontSize,
-                                          fontWeight: FontWeight.bold,
-                                          color: Colors.green[800],
-                                        ),
-
-
-                                      ),
-                                    ),
-
-
-
-
-
-
-
-
-
-
-
-                                  ],
-                                ),
-                              )) // // Big Container Ends
-
-                              .toList(),
+                              );
+                            } else {
+                              // Short screen → show 2 columns
+                              return GridView.count(
+                                crossAxisCount: 2,
+                                childAspectRatio: 3, // adjust to make items less tall
+                                mainAxisSpacing: 4,
+                                crossAxisSpacing: 4,
+                                shrinkWrap: true,
+                                physics: NeverScrollableScrollPhysics(),
+                                children: items,
+                              );
+                            }
+                          },
                         ),
-                      ),
-                ),
+                )
 
-                */ // Testing Masked
+
+
               ],
             ),
           ),
@@ -395,14 +293,16 @@ class _VangtiChaiState extends State<VangtiChai> {
         
         // Scale down spacing and padding for smaller screens
         double padding = availableWidth < 200 ? 6.0 : (availableWidth < 300 ? 8.0 : (availableWidth < 400 ? 12.0 : 16.0));
-        double spacing = availableWidth < 200 ? 4.0 : (availableWidth < 300 ? 6.0 : (availableWidth < 400 ? 8.0 : 12.0));
-        double fontSize = availableWidth < 200 ? 14.0 : (availableWidth < 300 ? 16.0 : (availableWidth < 400 ? 18.0 : 20.0));
+        double spacing = availableWidth < 200 ? 1.0 : (availableWidth < 300 ? 2.0 : (availableWidth < 400 ? 8.0 : 12.0));
+        double fontSize = availableWidth < 200 ? 6.0 : (availableWidth < 300 ? 10.0 : (availableWidth < 400 ? 18.0 : 20.0));
         double borderRadius = availableWidth < 200 ? 6.0 : (availableWidth < 300 ? 8.0 : (availableWidth < 400 ? 10.0 : 12.0));
         
 
 
         double screenHeight = MediaQuery.of(context).size.height;
-        bool isShortScreen = screenHeight < 500; // Check if the screen height is less than 500 pixels to determine if it's a short screen
+        double screenWidth = MediaQuery.of(context).size.width;
+        //bool isShortScreen = screenHeight < 500; // Check if the screen height is less than 500 pixels to determine if it's a short screen
+        bool isLandscape = screenWidth > screenHeight;
         List<String> keys3Columns = [
           "1", "2", "3",
           "4", "5", "6", 
@@ -416,8 +316,9 @@ class _VangtiChaiState extends State<VangtiChai> {
           "9", "", "", "CLR"
         ];
 
-
-        List<String> keys = isShortScreen ? 
+      
+        // List<String> keys = (isShortScreen ||  isLandscape)? 
+        List<String> keys = isLandscape?
           keys4Columns : // If the screen is short, we will use 4 columns
           keys3Columns; // Otherwise, we will use 3 columns
 
@@ -433,7 +334,8 @@ class _VangtiChaiState extends State<VangtiChai> {
             child: 
             GridView.count(
               // crossAxisCount: 3,
-              crossAxisCount: isShortScreen ? 4 : 3, // If the screen is short, we will show 4 buttons in a row, otherwise 3
+              //crossAxisCount: (isShortScreen ||  isLandscape) ? 4 : 3, // If the screen is short, we will show 4 buttons in a row, otherwise 3
+              crossAxisCount: isLandscape ? 4 : 3,
               physics: NeverScrollableScrollPhysics(), // Disable scrolling to fit the keypad in the available space
               shrinkWrap: true,
               crossAxisSpacing: spacing,
