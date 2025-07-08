@@ -294,7 +294,7 @@ class _VangtiChaiState extends State<VangtiChai> {
         // Scale down spacing and padding for smaller screens
         double padding = availableWidth < 200 ? 6.0 : (availableWidth < 300 ? 8.0 : (availableWidth < 400 ? 12.0 : 16.0));
         double spacing = availableWidth < 200 ? 1.0 : (availableWidth < 300 ? 2.0 : (availableWidth < 400 ? 8.0 : 12.0));
-        double fontSize = availableWidth < 200 ? 6.0 : (availableWidth < 300 ? 10.0 : (availableWidth < 400 ? 18.0 : 20.0));
+        double fontSize = availableWidth < 200 ? 12.0 : (availableWidth < 300 ? 14.0 : (availableWidth < 400 ? 18.0 : 20.0));
         double borderRadius = availableWidth < 200 ? 6.0 : (availableWidth < 300 ? 8.0 : (availableWidth < 400 ? 10.0 : 12.0));
         
 
@@ -402,7 +402,7 @@ class BuildAmountDisplay extends StatelessWidget {
     return Container 
     (
       width: double.infinity,
-      padding: EdgeInsets.all(16),
+      padding: EdgeInsets.symmetric(vertical: 4, horizontal: 8),
       decoration: BoxDecoration(
         color: Colors.green[50],
         borderRadius: BorderRadius.circular(8),
@@ -410,30 +410,32 @@ class BuildAmountDisplay extends StatelessWidget {
     ),
 
       child: 
-      Column( // "Taka" Label and er amount ekta column er moddhe rakhsi jate vertically aligned thake
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-
-
-          Text( // "Taka:" label
-            "Taka:",
-            style: TextStyle(
-              fontSize: 16,
-              color: Colors.green[700],
-              fontWeight: FontWeight.w500,
+      Center(
+        child: Column( // "Taka" Label and er amount ekta column er moddhe rakhsi jate vertically aligned thake
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+        
+        
+            Text( // "Taka:" label
+              "Taka:",
+              style: TextStyle(
+                fontSize: 10,
+                color: Colors.green[700],
+                fontWeight: FontWeight.w500,
+              ),
             ),
-          ),
-
-
-          Text( // Takar Amount
-            "৳${amountStr.isEmpty ? '0' : amountStr}",
-            style: TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-              color: Colors.green[800],
+        
+        
+            Text( // Takar Amount
+              "৳${amountStr.isEmpty ? '0' : amountStr}",
+              style: TextStyle(
+                fontSize: 10,
+                fontWeight: FontWeight.bold,
+                color: Colors.green[800],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

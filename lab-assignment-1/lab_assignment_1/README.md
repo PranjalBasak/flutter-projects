@@ -1,16 +1,10 @@
 # lab_assignment_1
+Vangti Chai App
 
-A new Flutter project.
+# Details on Tested Devices
 
-## Getting Started
-
-This project is a starting point for a Flutter application.
-
-A few resources to get you started if this is your first Flutter project:
-
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+| Device   | Resolution (dp) | Portrait Screenshot | Landscape Screenshot |
+| -------- | --------------- | ------------------- | -------------------- |
+| Pixel XL | 411 × 731       | ![](screenshots/pixel_phone_portrait.png)   | ![](screenshots/pixel_phone_landscape.png)   |
+| Nexus 10 | 800 × 1280      | ![](screenshots/nexus_10_tablet_portrait.png)   | ![](screenshots/nexus_10_tablet_landscape.png)   |
+| Samsung Galaxy M14 5G | 440 × 979 | ![](screenshots/Samsung_Galaxy_M14_5G_Portrait.jpg) | ![](screenshots/Samsung_Galaxy_M14_5G_Landscape.jpg) |
