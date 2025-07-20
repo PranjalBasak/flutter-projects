@@ -89,7 +89,7 @@ class _VangtiChaiState extends State<VangtiChai> {
   Widget buildContainer() { 
     return Padding(
       padding: const EdgeInsets.all(16.0),
-      child: LayoutBuilder( // Using layout builder to get the available width and height of the parent and make the widget responsive
+      child: LayoutBuilder(
         builder: (context, constraints) {
           double screenWidth = constraints.maxWidth;
           //double screenHeight = constraints.maxHeight;
@@ -100,12 +100,12 @@ class _VangtiChaiState extends State<VangtiChai> {
           bool isMedium = screenWidth < 900;
           
           // Calculate optimal keypad dimensions that fit side-by-side
-          double availableWidthForKeypad = (screenWidth - 32 - 16) * 0.35; // Account for padding and spacing
-          double keypadWidth = availableWidthForKeypad.clamp(150.0, 280.0);
+          double availableWidthForKeypad = (screenWidth - 32 - 16) * 0.35; // Account for padding (16+16) and spacing -> SizedBox(width: 16),
+          double keypadWidth = availableWidthForKeypad.clamp(150.0, 280.0); // here we essentially set a boundary of how much you are allowed to shrink or stretch
           
           // Adjust flex ratios based on screen size for better proportions - give keypad more space
-          int changeTableFlex = isVeryNarrow ? 2 : (isNarrow ? 3 : (isMedium ? 4 : 5));
-          int keypadFlex = isVeryNarrow ? 3 : (isNarrow ? 4 : (isMedium ? 5 : 6));
+          int changeTableFlex = isVeryNarrow ? 2 : (isNarrow ? 3 : (isMedium ? 4 : 5)); // how much proprotion the change table should get
+          int keypadFlex = isVeryNarrow ? 3 : (isNarrow ? 4 : (isMedium ? 5 : 6)); // how much proprotion the keypad should get
           
           return Row(
             children: [
@@ -113,12 +113,14 @@ class _VangtiChaiState extends State<VangtiChai> {
                 flex: changeTableFlex,
                 child: buildChangeTable(), // Build the change table with responsive design
               ),
-              SizedBox(width: 16),
+              SizedBox(width: 16), // it takes 16 pixels of space between the change table and the keypad: fixed size
+                                  // the rest of the space will be distributed to changeTable and keypad based on the flex ratios
               Expanded(
                 flex: keypadFlex,
                 child: Center(
                   child: SizedBox(
-                    width: keypadWidth,
+                    width: keypadWidth, // Even though the flex allows the keypad to take more space, we set a max width beyond which it cannot stretch
+                                        // and a min width below which it cannot shrink
                     child: buildKeypad(), // Build the keypad with responsive design
                   ),
                 ),
@@ -138,7 +140,7 @@ class _VangtiChaiState extends State<VangtiChai> {
   double badgePadding,
 ) {
   return Container(
-    margin: EdgeInsets.symmetric(
+    margin: EdgeInsets.symmetric( // apply margin to the to and bottom of the tile
       vertical: availableWidth < 250
           ? 1.0
           : (availableWidth < 350 ? 1.5 : 2.0),
@@ -231,53 +233,157 @@ class _VangtiChaiState extends State<VangtiChai> {
                 
 
                 Expanded(
-                  child: changeMap.isEmpty
-                      ? Center(
-                          child: Text(
-                            "Enter amount to see change",
-                            style: TextStyle(
-                              color: Colors.grey[600],
-                              fontSize: itemFontSize,
-                            ),
+  child: changeMap.isEmpty
+      ? Center(
+          child: Text(
+            "Enter amount to see change",
+            style: TextStyle(
+              color: Colors.grey[600],
+              fontSize: itemFontSize,
+            ),
+          ),
+        )
+      : LayoutBuilder(
+          builder: (context, constraints) {
+            double screenHeight = constraints.maxHeight;
+            double screenWidth = constraints.maxWidth;
+            bool isShortScreen = screenHeight < 400;
+
+            final items = changeMap.entries
+                .where((e) => e.value > 0)
+                .map((e) => buildChangeTile(e, availableWidth, itemFontSize, itemPadding, badgePadding))
+                .toList();
+
+            if (!isShortScreen  && screenHeight > screenWidth) { // only for portrait and tall screens
+              // Tall screen → show single column
+              // Normal height → show single column
+              return SingleChildScrollView( // We want the change table to be scrollable in case available size for the table is too small
+                child: Column(
+                  children: items,
+                ),
+              );
+            } else { // It's for landscape screen or short screen
+              // Short screen → show 2 columns
+              return GridView.count(
+                crossAxisCount: 2,
+                childAspectRatio: 3, // It means the width of each cell will be 3 times its height
+                mainAxisSpacing: 4,// Be default, scrollDirection: Axis.horizontal
+                                    // Thefore, main axis is the vertical axis. We want 4 pixel vertical gaps among all the cells 
+                crossAxisSpacing: 4, // It is the horizontal axis. We want 4 pixel horizontal gaps among all the cells 
+                //shrinkWrap: true,
+                //physics: NeverScrollableScrollPhysics(),
+                children: items,
+              );
+            }
+          },
+        ),
+)
+
+
+
+
+                /* Testing Masked
+                Expanded(
+                  child: 
+                  changeMap.isEmpty 
+                    ? Center(  // Message ta ekdom center e show korbe jokhon changeMap empty thake
+                        child: 
+                        
+                        Text(
+                          "Enter amount to see change", // Just ekta placeholder text; jokhon changeMap empty thake tokhon show korbe
+                          style: TextStyle(
+                            color: Colors.grey[600],
+                            fontSize: itemFontSize,
                           ),
-                        )
-                      : LayoutBuilder(
-                          builder: (context, constraints) {
-                            double screenHeight = constraints.maxHeight;
-                            double screenWidth = constraints.maxWidth;
-                            //bool isShortScreen = screenHeight < 400;
-
-                            final items = changeMap.entries
-                                .where((e) => e.value > 0)
-                                .map((e) => buildChangeTile(e, availableWidth, itemFontSize, itemPadding, badgePadding))
-                                .toList();
-
-                            // if (!isShortScreen  && screenHeight > screenWidth) {
-                            if (screenHeight > screenWidth) {
-                              // Normal height → show single column
-                              return SingleChildScrollView(
-                                child: Column(
-                                  children: items,
-                                ),
-                              );
-                            } else {
-                              // Short screen → show 2 columns
-                              return GridView.count(
-                                crossAxisCount: 2,
-                                childAspectRatio: 3, // adjust to make items less tall
-                                mainAxisSpacing: 4,
-                                crossAxisSpacing: 4,
-                                shrinkWrap: true,
-                                physics: NeverScrollableScrollPhysics(),
-                                children: items,
-                              );
-                            }
-                          },
                         ),
-                )
+                      )
+
+
+                    // If changeMap is not empty, show the list of changes
+                    // Using SingleChildScrollView to allow scrolling if items overflow
+                    : SingleChildScrollView(
+                        child: 
+                        
+                        Column( // Column to hold all the change items (Item = Note/Change + Count)
+                          children: changeMap.entries
+                              .where((e) => e.value > 0)
+                              .map((e) => Container( // Big Container Starts
+                                margin: EdgeInsets.symmetric(vertical: availableWidth < 250 ? 1.0 : (availableWidth < 350 ? 1.5 : 2.0)),
+                                padding: EdgeInsets.all(itemPadding),
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(availableWidth < 250 ? 3.0 : (availableWidth < 350 ? 4.0 : 6.0)),
+                                  border: Border.all(color: Colors.grey[300]!),
+                                ),
+
+
+                                child: Row( // Every [Note/Change] AND [Its Count] will be in a Row
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+
+                                    Text( // This is the note/change in text
+                                      "৳${e.key}",
+                                      style: TextStyle(
+                                        fontSize: itemFontSize,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
 
 
 
+
+
+
+
+                                    Container(
+
+
+
+                                      padding: EdgeInsets.symmetric(
+                                        horizontal: badgePadding,
+                                        vertical: 2,
+                                      ),
+
+
+
+                                      decoration: BoxDecoration(
+                                        color: Colors.green[100],
+                                        borderRadius: BorderRadius.circular(availableWidth < 250 ? 6.0 : (availableWidth < 350 ? 8.0 : 12.0)),
+                                      ),
+
+
+                                      child: Text( // This is the count of that note/change
+                                        "${e.value}",
+                                        style: TextStyle(
+                                          fontSize: itemFontSize,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.green[800],
+                                        ),
+
+
+                                      ),
+                                    ),
+
+
+
+
+
+
+
+
+
+
+
+                                  ],
+                                ),
+                              )) // // Big Container Ends
+
+                              .toList(),
+                        ),
+                      ),
+                ),
+
+                */ // Testing Masked
               ],
             ),
           ),
@@ -293,16 +399,14 @@ class _VangtiChaiState extends State<VangtiChai> {
         
         // Scale down spacing and padding for smaller screens
         double padding = availableWidth < 200 ? 6.0 : (availableWidth < 300 ? 8.0 : (availableWidth < 400 ? 12.0 : 16.0));
-        double spacing = availableWidth < 200 ? 1.0 : (availableWidth < 300 ? 2.0 : (availableWidth < 400 ? 8.0 : 12.0));
-        double fontSize = availableWidth < 200 ? 12.0 : (availableWidth < 300 ? 14.0 : (availableWidth < 400 ? 18.0 : 20.0));
+        double spacing = availableWidth < 200 ? 4.0 : (availableWidth < 300 ? 6.0 : (availableWidth < 400 ? 8.0 : 12.0));
+        double fontSize = availableWidth < 200 ? 14.0 : (availableWidth < 300 ? 16.0 : (availableWidth < 400 ? 18.0 : 20.0));
         double borderRadius = availableWidth < 200 ? 6.0 : (availableWidth < 300 ? 8.0 : (availableWidth < 400 ? 10.0 : 12.0));
         
 
 
         double screenHeight = MediaQuery.of(context).size.height;
-        double screenWidth = MediaQuery.of(context).size.width;
-        //bool isShortScreen = screenHeight < 500; // Check if the screen height is less than 500 pixels to determine if it's a short screen
-        bool isLandscape = screenWidth > screenHeight;
+        bool isShortScreen = screenHeight < 500; // Check if the screen height is less than 500 pixels to determine if it's a short screen
         List<String> keys3Columns = [
           "1", "2", "3",
           "4", "5", "6", 
@@ -316,9 +420,8 @@ class _VangtiChaiState extends State<VangtiChai> {
           "9", "", "", "CLR"
         ];
 
-      
-        // List<String> keys = (isShortScreen ||  isLandscape)? 
-        List<String> keys = isLandscape?
+
+        List<String> keys = isShortScreen ? 
           keys4Columns : // If the screen is short, we will use 4 columns
           keys3Columns; // Otherwise, we will use 3 columns
 
@@ -334,9 +437,8 @@ class _VangtiChaiState extends State<VangtiChai> {
             child: 
             GridView.count(
               // crossAxisCount: 3,
-              //crossAxisCount: (isShortScreen ||  isLandscape) ? 4 : 3, // If the screen is short, we will show 4 buttons in a row, otherwise 3
-              crossAxisCount: isLandscape ? 4 : 3,
-              physics: NeverScrollableScrollPhysics(), // Disable scrolling to fit the keypad in the available space
+              crossAxisCount: isShortScreen ? 4 : 3, // If the screen is short, we will show 4 buttons in a row, otherwise 3
+              //physics: NeverScrollableScrollPhysics(), // Disable scrolling to fit the keypad in the available space
               shrinkWrap: true,
               crossAxisSpacing: spacing,
               mainAxisSpacing: spacing,
@@ -402,7 +504,7 @@ class BuildAmountDisplay extends StatelessWidget {
     return Container 
     (
       width: double.infinity,
-      padding: EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+      padding: EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.green[50],
         borderRadius: BorderRadius.circular(8),
@@ -410,32 +512,30 @@ class BuildAmountDisplay extends StatelessWidget {
     ),
 
       child: 
-      Center(
-        child: Column( // "Taka" Label and er amount ekta column er moddhe rakhsi jate vertically aligned thake
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-        
-        
-            Text( // "Taka:" label
-              "Taka:",
-              style: TextStyle(
-                fontSize: 10,
-                color: Colors.green[700],
-                fontWeight: FontWeight.w500,
-              ),
+      Column( // "Taka" Label and er amount ekta column er moddhe rakhsi jate vertically aligned thake
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+
+
+          Text( // "Taka:" label
+            "Taka:",
+            style: TextStyle(
+              fontSize: 16,
+              color: Colors.green[700],
+              fontWeight: FontWeight.w500,
             ),
-        
-        
-            Text( // Takar Amount
-              "৳${amountStr.isEmpty ? '0' : amountStr}",
-              style: TextStyle(
-                fontSize: 10,
-                fontWeight: FontWeight.bold,
-                color: Colors.green[800],
-              ),
+          ),
+
+
+          Text( // Takar Amount
+            "৳${amountStr.isEmpty ? '0' : amountStr}",
+            style: TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+              color: Colors.green[800],
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
