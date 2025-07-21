@@ -6,6 +6,10 @@ import 'dart:async';
 import 'package:photo_view/photo_view.dart';
 import 'package:video_player/video_player.dart';
 import 'package:chewie/chewie.dart';
+//import 'package:audioplayers/audioplayers.dart';
+import 'package:just_audio/just_audio.dart';
+import 'package:audio_session/audio_session.dart';
+import 'package:rxdart/rxdart.dart';
 
 // import 'package:cached_network_image/cached_network_image.dart';
 // import 'package:pinch_zoom/pinch_zoom.dart';
@@ -366,18 +370,273 @@ class _SystemBatteryInfoPageState extends State<SystemBatteryInfoPage> {
 
 
 
-
-class AudioPlayerPage extends StatelessWidget {
+/* Masked Out Audio Player Page*/
+class AudioPlayerPage extends StatefulWidget {
   const AudioPlayerPage({super.key});
 
   @override
-  Widget build(BuildContext context) => Scaffold(
-    drawer: NavigationDrawer(),
-    appBar: AppBar(
-      title: const Text('Audio Player Page'),
-      backgroundColor: const Color.fromARGB(255, 57, 126, 216)),
-    );
+  State<AudioPlayerPage> createState() => _AudioPlayerPageState();
 }
+
+class _AudioPlayerPageState extends State<AudioPlayerPage> {
+  late final AudioPlayer _audioPlayer;
+  Duration _duration = Duration.zero;
+  Duration _position = Duration.zero;
+  double _volume = 1.0;
+  double _playbackSpeed = 1.0;
+  bool _isPlaying = false;
+  bool _isSeeking = false;
+  bool _isCompleted = false;
+  bool _isMuted = false;
+  double _lastVolume = 1.0;
+
+  final List<double> _speedOptions = [0.5, 1.0, 1.5, 2.0];
+
+  @override
+  void initState() {
+    super.initState();
+    _audioPlayer = AudioPlayer();
+    _init();
+  }
+
+  Future<void> _init() async {
+    final session = await AudioSession.instance;
+    await session.configure(const AudioSessionConfiguration.music());
+    await _audioPlayer.setAsset('assets/audio/test.mp3');
+    _duration = _audioPlayer.duration ?? Duration.zero;
+    setState(() {});
+    _audioPlayer.positionStream.listen((pos) {
+      if (!_isSeeking) {
+        setState(() {
+          _position = pos;
+        });
+      }
+    });
+    _audioPlayer.durationStream.listen((dur) {
+      setState(() {
+        _duration = dur ?? Duration.zero;
+      });
+    });
+    _audioPlayer.playerStateStream.listen((state) {
+      setState(() {
+        _isPlaying = state.playing;
+        _isCompleted = state.processingState == ProcessingState.completed;
+      });
+    });
+    _audioPlayer.volumeStream.listen((vol) {
+      setState(() {
+        _volume = vol;
+        _isMuted = _volume == 0.0;
+      });
+    });
+  }
+
+  @override
+  void dispose() {
+    _audioPlayer.dispose();
+    super.dispose();
+  }
+
+  String _formatDuration(Duration d) {
+    String twoDigits(int n) => n.toString().padLeft(2, '0');
+    final minutes = twoDigits(d.inMinutes.remainder(60));
+    final seconds = twoDigits(d.inSeconds.remainder(60));
+    return '${d.inHours > 0 ? '${twoDigits(d.inHours)}:' : ''}$minutes:$seconds';
+  }
+
+  void _seekTo(Duration position) async {
+    setState(() => _isSeeking = true);
+    await _audioPlayer.seek(position);
+    setState(() => _isSeeking = false);
+  }
+
+  void _skipForward() {
+    final newPos = _position + const Duration(seconds: 10);
+    _seekTo(newPos < _duration ? newPos : _duration);
+  }
+
+  void _skipBackward() {
+    final newPos = _position - const Duration(seconds: 10);
+    _seekTo(newPos > Duration.zero ? newPos : Duration.zero);
+  }
+
+  void _setPlaybackSpeed(double speed) async {
+    await _audioPlayer.setSpeed(speed);
+    setState(() => _playbackSpeed = speed);
+  }
+
+  void _setVolume(double volume) async {
+    await _audioPlayer.setVolume(volume);
+    setState(() => _volume = volume);
+  }
+
+  void _toggleMute() async {
+    if (_isMuted) {
+      // Unmute: restore last nonzero volume or default to 1.0
+      double restoreVolume = _lastVolume > 0 ? _lastVolume : 1.0;
+      await _audioPlayer.setVolume(restoreVolume);
+      setState(() {
+        _isMuted = false;
+        _volume = restoreVolume;
+      });
+    } else {
+      // Mute: save current volume
+      _lastVolume = _volume > 0 ? _volume : (_lastVolume > 0 ? _lastVolume : 1.0);
+      await _audioPlayer.setVolume(0.0);
+      setState(() {
+        _isMuted = true;
+        _volume = 0.0;
+      });
+    }
+  }
+
+  void _restart() async {
+    await _audioPlayer.seek(Duration.zero);
+    await _audioPlayer.play();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      drawer: NavigationDrawer(),
+      appBar: AppBar(
+        title: const Text('Audio Player Page'),
+        backgroundColor: const Color.fromARGB(255, 57, 126, 216),
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(24.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.audiotrack, size: 80, color: Colors.blueAccent),
+            const SizedBox(height: 16),
+            Text('Sample Audio', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 24),
+            // Seekbar
+            StreamBuilder<Duration>(
+              stream: _audioPlayer.positionStream,
+              initialData: _position,
+              builder: (context, snapshot) {
+                final pos = snapshot.data ?? Duration.zero;
+                return Row(
+                  children: [
+                    Text(_formatDuration(pos)),
+                    Expanded(
+                      child: Slider(
+                        min: 0,
+                        max: _duration.inMilliseconds.toDouble(),
+                        value: pos.inMilliseconds.clamp(0, _duration.inMilliseconds).toDouble(),
+                        onChanged: (value) {
+                          // Only update UI onChangeEnd for smoothness
+                        },
+                        onChangeEnd: (value) {
+                          _seekTo(Duration(milliseconds: value.round()));
+                        },
+                      ),
+                    ),
+                    Text(_formatDuration(_duration)),
+                  ],
+                );
+              },
+            ),
+            const SizedBox(height: 16),
+            // Controls
+            if (_isCompleted)
+              ElevatedButton.icon(
+                icon: Icon(Icons.restart_alt),
+                label: Text('Restart'),
+                onPressed: _restart,
+              )
+            else
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  IconButton(
+                    icon: Icon(Icons.replay_10),
+                    iconSize: 36,
+                    onPressed: _skipBackward,
+                  ),
+                  IconButton(
+                    icon: Icon(_isPlaying ? Icons.pause_circle : Icons.play_circle),
+                    iconSize: 56,
+                    onPressed: () {
+                      if (_isPlaying) {
+                        _audioPlayer.pause();
+                      } else {
+                        _audioPlayer.play();
+                      }
+                    },
+                  ),
+                  IconButton(
+                    icon: Icon(Icons.forward_10),
+                    iconSize: 36,
+                    onPressed: _skipForward,
+                  ),
+                ],
+              ),
+            const SizedBox(height: 24),
+            // Playback speed
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Text('Speed:'),
+                const SizedBox(width: 8),
+                DropdownButton<double>(
+                  value: _playbackSpeed,
+                  items: _speedOptions
+                      .map((speed) => DropdownMenuItem(
+                            value: speed,
+                            child: Text('${speed}x'),
+                          ))
+                      .toList(),
+                  onChanged: (speed) {
+                    if (speed != null) _setPlaybackSpeed(speed);
+                  },
+                ),
+              ],
+            ),
+            const SizedBox(height: 24),
+            // Volume
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                GestureDetector(
+                  onTap: _toggleMute,
+                  child: Icon(_isMuted ? Icons.volume_off : Icons.volume_up),
+                ),
+                Expanded(
+                  child: Slider(
+                    min: 0,
+                    max: 1,
+                    value: _volume,
+                    onChanged: (value) {
+                      _setVolume(value);
+                      if (value == 0.0) {
+                        setState(() => _isMuted = true);
+                      } else {
+                        setState(() => _isMuted = false);
+                        _lastVolume = value;
+                      }
+                    },
+                  ),
+                ),
+                const SizedBox(width: 8),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+
+
+
+
+
+
+
 
 
 
