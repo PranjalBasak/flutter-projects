@@ -8,15 +8,14 @@
 7. User can create custom notification message for themselves
 
 
-# Build The Design
-- WireFrame Diagram 
-- Schema Diagram
+# Idea 2: Anime App
+1. Mood-Based Anime Suggestions (happy, sad, stressed, motivated)
+2. Anime Watch Scheduler: Plan your watch schedule and assign them on calendar dates
+3. Receive Upcoming Anime Airing dates, integrated to calendars
+4. Create Custom Watchlists ("Rainy Day Vibes", "Late Night Watchlist")
+5. Offline Watch Tracker (Tracks what animes the user has viewed, how many episodes)
+6. Anime Media Player that can play locally installed anime episodes
+7. Custom Notifications on upcoming watch sessions
 
-# Pick A State Managemenet Solution
-- Provider (Easiest)
-- Riverpod
-- Bloc
 
-# Pick A Local Database
-- SQLite with sqflite plugin
-- Hive (Easiest)
+
