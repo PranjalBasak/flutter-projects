@@ -433,6 +433,7 @@ class _AudioPlayerPageState extends State<AudioPlayerPage> {
 
   @override
   void dispose() {
+    _audioPlayer.stop(); //gpt-fix-1
     _audioPlayer.dispose();
     super.dispose();
   }
@@ -690,6 +691,7 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
 
   @override
   void dispose() {
+    _videoController.pause(); // gpt-fix-2
     _videoController.dispose();
     _chewieController?.dispose();
     super.dispose();

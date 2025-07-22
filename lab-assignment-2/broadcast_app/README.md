@@ -81,6 +81,9 @@ Copy code
 
 Go to 
 `C:\Users\User\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_broadcasts-0.4.0\android`
+- Linux: `/home/calypse/.pub-cache/hosted/pub.dev/flutter_broadcasts-0.4.0`
+<br>
+
 and see `build.gradle`
 
 
