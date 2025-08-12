@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:permission_handler/permission_handler.dart';
 import 'package:image/image.dart' as img;
 import 'dart:io';
-import 'dart:convert';
 import 'dart:typed_data';
 import 'base_client.dart';
 
@@ -297,6 +295,7 @@ class _EntityFormScreenState extends State<EntityFormScreen> {
       };
       
       debugPrint('📊 EntityFormScreen._submitForm() - Basic data: $entityData');
+      debugPrint('🔍 EntityFormScreen._submitForm() - Data types: title=${entityData['title'].runtimeType}, lat=${entityData['lat'].runtimeType}, lon=${entityData['lon'].runtimeType}');
 
       // Don't add image to entityData - it will be handled separately as a file
       if (_selectedImage != null) {
@@ -311,12 +310,14 @@ class _EntityFormScreenState extends State<EntityFormScreen> {
         debugPrint('✏️ EntityFormScreen._submitForm() - Update mode - adding entity ID');
         entityData['id'] = widget.entity!['id'];
         debugPrint('🆔 EntityFormScreen._submitForm() - Entity ID: ${widget.entity!['id']}');
+        debugPrint('📤 EntityFormScreen._submitForm() - Final PUT data: $entityData');
         debugPrint('🔄 EntityFormScreen._submitForm() - Making PUT request...');
-        result = await BaseClient().put('', entityData, imageFile: _selectedImage);
+        result = await BaseClient().put('', entityData);
       } else {
         debugPrint('➕ EntityFormScreen._submitForm() - Create mode');
+        debugPrint('📤 EntityFormScreen._submitForm() - Final POST data: $entityData');
         debugPrint('🔄 EntityFormScreen._submitForm() - Making POST request...');
-        result = await BaseClient().post('', entityData, imageFile: _selectedImage);
+        result = await BaseClient().post('', entityData);
       }
       
       debugPrint('💬 EntityFormScreen._submitForm() - API response: $result');

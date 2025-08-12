@@ -7,6 +7,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'dart:convert' as convert;
 import 'base_client.dart'; // Make sure this path is correct
 import 'entity_form.dart';
+import 'edit_entity.dart';
 
 void main() {
   runApp(const MyApp());
@@ -148,15 +149,27 @@ class _MyHomePageState extends State<MyHomePage> {
               debugPrint('📍 MyHomePage.build() - Entity $i: ${entities[i]}');
             }
 
-            // KEY CHANGE 2: Create a list of Marker widgets from the data.
+            // KEY CHANGE 2: Create a list of Marker widgets from valid entities only.
             debugPrint('🗺 MyHomePage.build() - Creating markers from entities...');
-            final List<Marker> markers = entities.map((entity) {
+            final List<Marker> markers = entities.where((entity) {
+              // Filter out entities with invalid coordinates
+              final latStr = entity['lat']?.toString() ?? '';
+              final lonStr = entity['lon']?.toString() ?? '';
+              final lat = double.tryParse(latStr);
+              final lon = double.tryParse(lonStr);
+              
+              if (lat == null || lon == null || latStr.isEmpty || lonStr.isEmpty) {
+                debugPrint('⚠️ MyHomePage.build() - Skipping entity ${entity['id']} from map due to invalid coordinates: lat="$latStr", lon="$lonStr"');
+                return false;
+              }
+              return true;
+            }).map((entity) {
             try {
               debugPrint('🔄 MyHomePage.build() - Processing entity: ${entity['id']}');
               
-              // Robustly parse coordinates
-              final lat = (entity['lat'] as num).toDouble();
-              final lon = (entity['lon'] as num).toDouble();
+              // Parse coordinates (we know they're valid from the filter above)
+              final lat = double.parse(entity['lat'].toString());
+              final lon = double.parse(entity['lon'].toString());
               final title = entity['title'] as String;
               final imageUrl = "${imageBasePath}${entity['image']}";
               
@@ -173,20 +186,29 @@ class _MyHomePageState extends State<MyHomePage> {
                   debugPrint('📝 MyHomePage.build() - Showing bottom sheet for: $title');
                   showModalBottomSheet(
                     context: context,
+                    isScrollControlled: true,
                     builder: (sheetContext) {
-                      return Padding(
-                        padding: const EdgeInsets.all(100.0),
-                        child: Column(
-                          children: [
-                            Text(
+                      return DraggableScrollableSheet(
+                        initialChildSize: 0.6,
+                        maxChildSize: 0.9,
+                        minChildSize: 0.3,
+                        builder: (context, scrollController) {
+                          return SingleChildScrollView(
+                            controller: scrollController,
+                            child: Padding(
+                              padding: const EdgeInsets.all(20.0),
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text(
                                     title,
                                     style: const TextStyle(
                                       fontSize: 18,
                                       fontWeight: FontWeight.bold,
                                     ),
                                   ),
-                            SizedBox(height: 50,),
-                            GestureDetector(
+                                  const SizedBox(height: 16),
+                                  GestureDetector(
                               onTap: (){
                                 debugPrint('🖼️ MyHomePage.build() - Image tapped in bottom sheet');
                                 if(entity['image']==null) {
@@ -217,38 +239,13 @@ class _MyHomePageState extends State<MyHomePage> {
                                   }
                                   else return Text('Error loading image: $error');
                                 },
+                                ),
+                              ),
+                                ],
                               ),
                             ),
-                          ],
-                        ),
-                        
-                        
-                        // Row(
-                        //   children: 
-                          // [
-                          //   Expanded(
-                          //     child: Text(
-                          //       title,
-                          //       style: const TextStyle(
-                          //         fontSize: 18,
-                          //         fontWeight: FontWeight.bold,
-                          //       ),
-                          //     ),
-                          //   ),
-                          //   GestureDetector(
-                          //     onTap: () {
-                          //       Navigator.pop(sheetContext); // close sheet
-                          //       Future.microtask(() => _showEnlargedImage(context, title, imageUrl));
-                          //     },
-                          //     child: Image.network(
-                          //       imageUrl,
-                          //       height: 50,
-                          //       width: 50,
-                          //       fit: BoxFit.cover,
-                          //     ),
-                          //   ),
-                          // ],
-                        // ),
+                          );
+                        },
                       );
                     },
                   );
@@ -375,9 +372,24 @@ class _MyHomePageState extends State<MyHomePage> {
             ListTile(
               leading: const Icon(Icons.list),
               title: const Text('Entity List'),
-              onTap: () {
+              onTap: () async {
+                debugPrint('📋 MyHomePage.drawer() - Entity List menu item tapped');
                 Navigator.pop(context);
-                // TODO: Navigate to Entity List screen
+                debugPrint('🚀 MyHomePage.drawer() - Navigating to EntityListScreen');
+                final result = await Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const EntityListScreen(),
+                  ),
+                );
+                debugPrint('🔙 MyHomePage.drawer() - Returned from EntityListScreen with result: $result');
+                // Refresh the map if entities were modified
+                if (result == true) {
+                  debugPrint('🔄 MyHomePage.drawer() - Refreshing map data...');
+                  setState(() {
+                    _mapDataFuture = BaseClient().get('');
+                  });
+                }
               },
             ),
           ],
