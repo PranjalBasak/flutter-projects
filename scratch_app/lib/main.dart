@@ -67,7 +67,7 @@ class _HomePageState extends State<HomePage> {
             child: Row(
               children: [
                 Expanded(
-                  flex: 2,
+                  flex: 1,
                   child: Card(
                     child: ColumnWidgetChangeBreakdown(changeMap: changeMap,),
                   ),
@@ -76,7 +76,7 @@ class _HomePageState extends State<HomePage> {
                 // SizedBox(width: 16),
 
                 Expanded(
-                  flex: 3,
+                  flex: 1,
                   child: 
                     KeyPad(onKeyPressed: handleKeypad,),
                       )
@@ -105,7 +105,7 @@ class KeyPad extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.all(100.0),
+      padding: const EdgeInsets.all(15.0),
       child: Card(
         child: GridView.count(
           crossAxisCount: 3,
@@ -113,7 +113,7 @@ class KeyPad extends StatelessWidget {
           shrinkWrap: true,
           mainAxisSpacing: 15,
           crossAxisSpacing: 15,
-          childAspectRatio: 3,
+          childAspectRatio: 0.5,
           children: keylist.map((key){
             return ElevatedButton(onPressed: ()=>onKeyPressed(key), child: Text(key));
           }).toList(),
@@ -152,13 +152,13 @@ class OriginalDisplay extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Padding(
-            padding: const EdgeInsets.all(8.0),
+            padding: const EdgeInsets.all(2.0),
             child: Text("${e.key}"),
           ),
           Text(":"),
 
           Padding(
-            padding: const EdgeInsets.all(8.0),
+            padding: const EdgeInsets.all(2.0),
             child: Text("${e.value}"),
           ),
         ]
@@ -173,10 +173,10 @@ class OriginalDisplay extends StatelessWidget {
         child: Text("Enter amount to display:"));
     } else{
         return GridView.count(
-          crossAxisCount: 3,
+          crossAxisCount: 2,
           childAspectRatio: 3,
           mainAxisSpacing: 4,
-          crossAxisSpacing: 4,
+          crossAxisSpacing: 2,
           shrinkWrap: true,
           physics: NeverScrollableScrollPhysics(),
           children: items,
