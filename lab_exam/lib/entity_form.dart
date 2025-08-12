@@ -317,6 +317,8 @@ class _EntityFormScreenState extends State<EntityFormScreen> {
         debugPrint('➕ EntityFormScreen._submitForm() - Create mode');
         debugPrint('📤 EntityFormScreen._submitForm() - Final POST data: $entityData');
         debugPrint('🔄 EntityFormScreen._submitForm() - Making POST request...');
+        debugPrint('X-Check: FINAL entityData before API call: $entityData');
+
         result = await BaseClient().post('', entityData);
       }
       

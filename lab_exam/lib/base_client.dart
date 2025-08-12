@@ -36,18 +36,21 @@ class BaseClient {
     var client = http.Client();
     try {
       var url = Uri.parse(baseUrl + api);
-      var jsonBody = jsonEncode(data);
       debugPrint('🌐 BaseClient.post() - URL: $url');
-      debugPrint('📤 BaseClient.post() - Request body: $jsonBody');
-      debugPrint('📋 BaseClient.post() - Headers: Content-Type: application/json');
+      debugPrint('📤 BaseClient.post() - Form data: $data');
       
-      var response = await client.post(
-        url,
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: jsonBody,
-      );
+      var request = http.MultipartRequest('POST', url);
+      
+      // Add form fields
+      data.forEach((key, value) {
+        request.fields[key] = value.toString();
+        debugPrint('📝 BaseClient.post() - Adding field: $key = ${value.toString()}');
+      });
+      
+      debugPrint('📋 BaseClient.post() - All fields: ${request.fields}');
+      
+      var streamedResponse = await client.send(request);
+      var response = await http.Response.fromStream(streamedResponse);
       
       debugPrint('📥 BaseClient.post() - Response status: ${response.statusCode}');
       debugPrint('📄 BaseClient.post() - Response body: ${response.body}');
@@ -70,18 +73,21 @@ class BaseClient {
     var client = http.Client();
     try {
       var url = Uri.parse(baseUrl + api);
-      var jsonBody = jsonEncode(data);
       debugPrint('🌐 BaseClient.put() - URL: $url');
-      debugPrint('📤 BaseClient.put() - Request body: $jsonBody');
-      debugPrint('📋 BaseClient.put() - Headers: Content-Type: application/json');
+      debugPrint('📤 BaseClient.put() - Form data: $data');
       
-      var response = await client.put(
-        url,
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: jsonBody,
-      );
+      var request = http.MultipartRequest('PUT', url);
+      
+      // Add form fields
+      data.forEach((key, value) {
+        request.fields[key] = value.toString();
+        debugPrint('📝 BaseClient.put() - Adding field: $key = ${value.toString()}');
+      });
+      
+      debugPrint('📋 BaseClient.put() - All fields: ${request.fields}');
+      
+      var streamedResponse = await client.send(request);
+      var response = await http.Response.fromStream(streamedResponse);
       
       debugPrint('📥 BaseClient.put() - Response status: ${response.statusCode}');
       debugPrint('📄 BaseClient.put() - Response body: ${response.body}');
